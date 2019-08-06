@@ -2,4 +2,4 @@
 
 ## Information
 
-I will build a simple environment with an robot arm using openai gym and pybullet
+Setup an openai gym with pybullet
