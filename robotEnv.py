@@ -4,29 +4,32 @@ from gym.utils import seeding
 import numpy as np
 import pybullet as p
 import pybullet_data
+import time
 
-class KukaEnv(gym.Env):
+from robot import Robot
+
+
+class RobotEnv(gym.Env):
     """
     Openai Gym Environment for the Kuka UR10 arm with pybullet physics.
-
+    Follows the openai gym environment template.
     """
 
-    def __init__(self, isDiscrete=False, renders=False):
+    def __init__(self, isDiscrete=False, renders=True, maxSteps=1000):
         self._p = p
         self._action_bound = 1
         self._action_dim = 3
         self.terminated = 0
+        self._timeSleep = 1. / 240.
         self._p = p
-
-        self._renders = renders
         self._isDiscrete = isDiscrete
+        self._renders = renders
+        self._maxtSteps = maxSteps
+        self._envStepCounter = 0
 
-        if self._renders:
-            cid = p.connect(p.SHARED_MEMORY)
-            if (cid < 0):
-                cid = p.connect(p.GUI)
-        else:
-            p.connect(p.DIRECT)
+        self.set_render(p)
+        p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        self.reset()
 
         self.seed()
         self.get_action_space()
@@ -37,7 +40,13 @@ class KukaEnv(gym.Env):
 
         :return: None
         """
+        self.terminated = 0
+        p.resetSimulation()
+        p.loadURDF("plane.urdf")
         p.setGravity(0, 0, -9.82)
+        self.robot = Robot()
+        self._envStepCounter = 0
+        p.stepSimulation()
 
     def reward(self):
         return -1.0
@@ -67,6 +76,41 @@ class KukaEnv(gym.Env):
             mode (str): the mode to render with
         """
         return None
+
+    def set_render(self, p):
+        """
+        Set the render moder for the p - bullet engine.
+
+        :param p: bullet enginge
+        :return:
+        """
+        if self._renders:
+            # TODO: check different p.connect() options
+            # cid = p.connect(p.SHARED_MEMORY)
+            cid = p.connect(p.GUI)
+            if (cid < 0):
+                cid = p.connect(p.GUI)
+        else:
+            cid = p.connect(p.DIRECT)
+
+    def step(self, action_hip=0.0):
+        kp = 0.1  # 0.012
+        kd = 10.4  # .2
+        maxForce = self.robot.max_force
+        print(self.robot.joint_dict)
+        print("hip index : ", self.robot.joint_dict["hip"])
+        p.setJointMotorControl2(bodyIndex=self.robot.robot,
+                                jointIndex=self.robot.joint_dict["hip"],
+                                controlMode=p.POSITION_CONTROL,
+                                targetPosition=action_hip,
+                                positionGain=kp,
+                                velocityGain=kd,
+                                force=maxForce)
+
+        hipInfo = p.getJointInfo(self.robot.robot, self.robot.joint_dict["hip"])
+
+        time.sleep(self._timeSleep)
+
 
     def get_action_space(self):
         """
