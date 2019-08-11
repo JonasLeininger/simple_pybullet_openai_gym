@@ -42,7 +42,7 @@ class RobotEnv(gym.Env):
         """
         self.terminated = 0
         p.resetSimulation()
-        p.loadURDF("plane.urdf")
+        self.plane = p.loadURDF("plane.urdf")
         p.setGravity(0, 0, -9.82)
         self.robot = Robot()
         self._envStepCounter = 0
@@ -95,7 +95,7 @@ class RobotEnv(gym.Env):
 
     def step(self, action_hip):
         self.robot.applyAction(action_hip)
-
+        self._termination()
         time.sleep(self._timeSleep)
 
 
@@ -113,7 +113,11 @@ class RobotEnv(gym.Env):
             self.action_space = spaces.Box(-action_high, action_high)
 
     def _termination(self):
-        return False
+        # robot index 4 indicates the hand. Check if hand is near the ground
+        closest_point = p.getClosestPoints(self.plane, self.robot.robot, 0.005, -1, 4)
+        print(closest_point)
+        if len(closest_point):
+            self.terminated = 1
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)

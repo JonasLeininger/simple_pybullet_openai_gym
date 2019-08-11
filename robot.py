@@ -73,7 +73,7 @@ class Robot:
     def motor_control(self, action, force, index):
         if index == 1:
             force = self.max_force_hip
-        
+
         p.setJointMotorControl2(bodyIndex=self.robot,
                                 jointIndex=index,
                                 controlMode=p.POSITION_CONTROL,

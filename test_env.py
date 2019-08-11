@@ -10,7 +10,8 @@ def main():
         random_action = np.random.random(size=robotEnv.robot.n_joints - 1)
         robotEnv.step(random_action)
         obs = robotEnv.robot.get_observation()
-        print(obs)
+        if robotEnv.terminated == 1:
+            break
         p.stepSimulation()
 
 
