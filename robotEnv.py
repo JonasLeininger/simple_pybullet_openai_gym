@@ -114,9 +114,22 @@ class RobotEnv(gym.Env):
 
     def _termination(self):
         # robot index 4 indicates the hand. Check if hand is near the ground
-        closest_point = p.getClosestPoints(self.plane, self.robot.robot, 0.005, -1, 4)
-        print(closest_point)
+        # linkIndex of -1 is the base of the body
+        closest_point = p.getClosestPoints(bodyA=self.plane,
+                                           bodyB=self.robot.robot,
+                                           distance=0.005,
+                                           linkIndexA=-1,
+                                           linkIndexB=4)
+
         if len(closest_point):
+            closest_point = closest_point[0]
+            print("Termination with the following closest_point between ground plane and hand")
+            print("positionOnA : ", closest_point[5])
+            print("positionOnB : ", closest_point[6])
+            print("contactNormalOnB : ", closest_point[7])
+            print("contact distance : ", closest_point[8])
+            print("normal force : ", closest_point[9])
+            print("lateral friction 1 : ", closest_point[10])
             self.terminated = 1
 
     def seed(self, seed=None):
