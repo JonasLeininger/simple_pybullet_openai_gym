@@ -21,7 +21,7 @@ class RobotEnv(gym.Env):
         self._action_dim = 3
         self.terminated = 0
         self._timeSleep = 1. / 240.
-        self._p = p
+        # self._p = p
         self._isDiscrete = isDiscrete
         self._renders = renders
         self._maxtSteps = maxSteps
@@ -93,21 +93,8 @@ class RobotEnv(gym.Env):
         else:
             cid = p.connect(p.DIRECT)
 
-    def step(self, action_hip=0.0):
-        kp = 0.1  # 0.012
-        kd = 10.4  # .2
-        maxForce = self.robot.max_force
-        print(self.robot.joint_dict)
-        print("hip index : ", self.robot.joint_dict["hip"])
-        p.setJointMotorControl2(bodyIndex=self.robot.robot,
-                                jointIndex=self.robot.joint_dict["hip"],
-                                controlMode=p.POSITION_CONTROL,
-                                targetPosition=action_hip,
-                                positionGain=kp,
-                                velocityGain=kd,
-                                force=maxForce)
-
-        hipInfo = p.getJointInfo(self.robot.robot, self.robot.joint_dict["hip"])
+    def step(self, action_hip):
+        self.robot.applyAction(action_hip)
 
         time.sleep(self._timeSleep)
 

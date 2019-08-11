@@ -7,9 +7,9 @@ def main():
     robotEnv = RobotEnv()
     print(RobotEnv.action_space)
     for i in range(10000):
-        random_action = np.random.random(size=1)
+        random_action = np.random.random(size=robotEnv.robot.n_joints - 1)
         robotEnv.step(random_action)
-        obs = robotEnv.robot.getObservation()
+        obs = robotEnv.robot.get_observation()
         print(obs)
         p.stepSimulation()
 
