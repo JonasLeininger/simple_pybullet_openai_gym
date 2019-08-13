@@ -9,7 +9,7 @@ class Robot:
 
     def __init__(self, urdf_root_path=pybullet_data.getDataPath()):
         self.max_velocity = 0.4
-        self.max_force = 150.
+        self.max_force = 100.
         self.max_force_hip = 200.
         self.kp = 0.1
         self.kd = 10.4

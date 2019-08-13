@@ -20,7 +20,9 @@ class RobotEnv(gym.Env):
         self._action_bound = 1
         self._action_dim = 3
         self.terminated = 0
-        self._timeSleep = 1. / 240.
+        self._timeSleep = 1. / 24.
+        self.box_pos = np.zeros(3)
+        self.angle = 0.
         # self._p = p
         self._isDiscrete = isDiscrete
         self._renders = renders
@@ -43,13 +45,24 @@ class RobotEnv(gym.Env):
         self.terminated = 0
         p.resetSimulation()
         self.plane = p.loadURDF("plane.urdf")
+
         p.setGravity(0, 0, -9.82)
         self.robot = Robot()
+        cube_start_pos = [0, 0, 0]
+        cube_start_orientation = p.getQuaternionFromEuler([0, 0, 0])
+        self.box = p.loadURDF("box.urdf",
+                              cube_start_pos,
+                              cube_start_orientation,
+                              useFixedBase=0
+                              )
         self._envStepCounter = 0
         p.stepSimulation()
 
     def reward(self):
-        return -1.0
+        reward = 0.0
+        if self.terminated == 1:
+            reward = -100.
+        return reward
 
     def render(self, mode='human'):
         """Renders the environment.
@@ -95,9 +108,22 @@ class RobotEnv(gym.Env):
 
     def step(self, action_hip):
         self.robot.applyAction(action_hip)
+        shift = np.zeros(3)
+        x, y = self.orbit(self.angle, 1)
+        shift[0] = x
+        shift[1] = y
+        self.move_floating_box(shift)
         self._termination()
         time.sleep(self._timeSleep)
 
+    def move_floating_box(self, shift):
+        self.box_pos = shift
+        cube_start_pos = self.box_pos
+        cube_start_orientation = p.getQuaternionFromEuler([0, 0, 0])
+        p.resetBasePositionAndOrientation(self.box,
+                              cube_start_pos,
+                              cube_start_orientation
+                              )
 
     def get_action_space(self):
         """
@@ -134,6 +160,13 @@ class RobotEnv(gym.Env):
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
+
+    def orbit(self, angle, radius):
+        x = np.sin(angle) * radius
+        y = np.cos(angle) * radius
+        self.angle += .1
+        return x, y
+
 
     def __del__(self):
         p.disconnect()
